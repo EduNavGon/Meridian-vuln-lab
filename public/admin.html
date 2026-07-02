@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meridian Ledger — Admin Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="h-full bg-slate-50 text-slate-800">
+  <div class="max-w-4xl mx-auto p-8">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="h-9 w-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">M</div>
+      <h1 class="text-xl font-semibold text-slate-900">Admin Console — Support Queue</h1>
+    </div>
+    <p class="text-sm text-slate-500 mb-4">Requires an admin session. Open tickets submitted by members below.</p>
+    <div id="tickets" class="space-y-3"></div>
+    <p id="err" class="text-sm text-red-600 hidden"></p>
+  </div>
+
+  <script>
+    // Admin support queue. Ticket subject/body are rendered as-is.
+    fetch('/api/admin/tickets', { credentials: 'same-origin' })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(({ tickets }) => {
+        const wrap = document.getElementById('tickets');
+        if (!tickets.length) { wrap.innerHTML = '<div class="text-sm text-slate-500">No tickets.</div>'; return; }
+        tickets.forEach(t => {
+          const card = document.createElement('div');
+          card.className = 'bg-white border border-slate-200 rounded-xl p-4 shadow-sm';
+          // Rendered without escaping (stored XSS sink):
+          card.innerHTML =
+            '<div class="text-xs text-slate-400 mb-1">#' + t.id + ' · ' + t.author_email + ' · ' + t.created_at + '</div>' +
+            '<div class="font-medium text-slate-900 mb-1">' + t.subject + '</div>' +
+            '<div class="text-sm text-slate-700">' + t.body + '</div>';
+          wrap.appendChild(card);
+        });
+      })
+      .catch((s) => { const e = document.getElementById('err'); e.textContent = 'Could not load tickets (status ' + s + '). Sign in as an admin first.'; e.classList.remove('hidden'); });
+  </script>
+</body>
+</html>

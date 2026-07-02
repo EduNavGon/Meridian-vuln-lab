@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meridian Ledger — Financial Operations</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: {
+      brand: { 50:'#eef2ff',100:'#e0e7ff',500:'#6366f1',600:'#4f46e5',700:'#4338ca',900:'#312e81' },
+      ink: { 900:'#0f172a',800:'#1e293b',700:'#334155',500:'#64748b',300:'#cbd5e1' }
+    }}}};
+  </script>
+  <style>
+    body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial; }
+    .card { background:#fff; border:1px solid #e2e8f0; border-radius:14px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
+    .nav-item.active { background:#eef2ff; color:#4338ca; }
+    ::-webkit-scrollbar { width:10px; height:10px; } ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:8px; }
+  </style>
+</head>
+<body class="h-full bg-slate-50 text-ink-800">
+
+  <!-- LAB banner -->
+  <div id="labBanner" class="w-full bg-amber-500/95 text-amber-950 text-xs md:text-sm px-4 py-1.5 text-center font-medium">
+    ⚠ Meridian Ledger — <strong>intentionally vulnerable test target</strong>. Isolated lab use only. Do not enter real data.
+  </div>
+
+  <!-- ===================== LOGIN ===================== -->
+  <div id="loginView" class="min-h-[calc(100vh-32px)] flex items-center justify-center px-4">
+    <div class="w-full max-w-md">
+      <div class="flex items-center gap-3 justify-center mb-6">
+        <div class="h-10 w-10 rounded-xl bg-brand-600 flex items-center justify-center text-white font-bold text-lg">M</div>
+        <div class="text-2xl font-semibold tracking-tight text-ink-900">Meridian Ledger</div>
+      </div>
+      <div class="card p-8">
+        <h1 class="text-lg font-semibold text-ink-900">Sign in to your workspace</h1>
+        <p class="text-sm text-ink-500 mt-1">Financial operations console</p>
+        <form id="loginForm" class="mt-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-ink-700 mb-1">Work email</label>
+            <input id="email" type="email" value="alice@meridian.io" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-ink-700 mb-1">Password</label>
+            <input id="password" type="password" value="Password123!" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none" />
+          </div>
+          <button class="w-full bg-brand-600 hover:bg-brand-700 text-white rounded-lg py-2.5 text-sm font-medium transition">Sign in</button>
+          <p id="loginError" class="text-sm text-red-600 hidden"></p>
+        </form>
+        <div class="mt-6 pt-4 border-t border-slate-100 text-xs text-ink-500">
+          Demo accounts: <code>alice@meridian.io / Password123!</code> · <code>bob@meridian.io / Sunshine#2024</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== APP ===================== -->
+  <div id="appView" class="hidden min-h-[calc(100vh-32px)] flex">
+    <!-- Sidebar -->
+    <aside class="w-64 shrink-0 bg-white border-r border-slate-200 flex flex-col">
+      <div class="h-16 flex items-center gap-2.5 px-5 border-b border-slate-100">
+        <div class="h-8 w-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold">M</div>
+        <span class="font-semibold text-ink-900">Meridian</span>
+      </div>
+      <nav class="flex-1 p-3 space-y-1 text-sm" id="nav">
+        <button data-view="overview"   class="nav-item active w-full text-left px-3 py-2 rounded-lg font-medium text-ink-700">Overview</button>
+        <button data-view="wallet"     class="nav-item w-full text-left px-3 py-2 rounded-lg font-medium text-ink-700">Wallet & Transfers</button>
+        <button data-view="reports"    class="nav-item w-full text-left px-3 py-2 rounded-lg font-medium text-ink-700">Invoices & Reports</button>
+        <button data-view="accounts"   class="nav-item w-full text-left px-3 py-2 rounded-lg font-medium text-ink-700">Accounts</button>
+        <button data-view="billing"    class="nav-item w-full text-left px-3 py-2 rounded-lg font-medium text-ink-700">Billing</button>
+        <button data-view="coupons"    class="nav-item w-full text-left px-3 py-2 rounded-lg font-medium text-ink-700">Promotions</button>
+        <button data-view="integrations" class="nav-item w-full text-left px-3 py-2 rounded-lg font-medium text-ink-700">Integrations</button>
+        <button data-view="settings"   class="nav-item w-full text-left px-3 py-2 rounded-lg font-medium text-ink-700">Settings</button>
+      </nav>
+      <div class="p-3 border-t border-slate-100">
+        <button id="logoutBtn" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-ink-500 hover:bg-slate-50">Sign out</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+        <h2 id="pageTitle" class="text-lg font-semibold text-ink-900">Overview</h2>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <div id="userName" class="text-sm font-medium text-ink-900">—</div>
+            <div id="userTitle" class="text-xs text-ink-500">—</div>
+          </div>
+          <div id="avatar" class="h-9 w-9 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-sm font-semibold">A</div>
+        </div>
+      </header>
+
+      <main class="flex-1 overflow-auto p-6" id="content"><!-- views injected here --></main>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
