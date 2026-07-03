@@ -4,3 +4,8 @@ data/*.db
 data/*.db-journal
 .env
 .DS_Store
+
+# Internos del motor Vex Raptor — no publicar en el repo del lab
+Evaluacion_Raptor_vs_Meridian.docx
+PROMPT_Arreglar_Motor_Raptor.md
+PROMPT_Fix_Raptor_Engine_EN.md

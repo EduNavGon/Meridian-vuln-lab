@@ -158,3 +158,36 @@ detección automática.
 | 17 | Session fixation | `POST /api/auth/login` (cookie `sid` preexistente) |
 | 18 | SQLi de segundo orden | `PUT /api/users/me` (nickname) → `GET /api/reports/summary` |
 | 19 | XSS almacenado ciego (dispara en admin) | `POST /api/support` → `/admin.html` |
+| 20 | Inyección de operadores estilo NoSQL (rompe scope por owner) | `POST /api/search/invoices` |
+| 21 | Web cache poisoning (input no-keyed: `X-Forwarded-Host`) | `GET /api/status/summary` |
+| 22 | JWT `kid` path traversal + OAuth open redirect | `GET /api/v2/admin` (kid) · `GET /api/auth/authorize` |
+| 23 | Refund double-spend (lógica de negocio + race fino) | `POST /api/billing/charge` → `POST /api/billing/refund` |
+
+Total: **23 vulnerabilidades** (las 19 originales + 4 del set extendido v1.5).
+
+---
+
+## Instrumentación para entrenar un escáner
+
+El lab incluye herramientas para medir, de forma reproducible, cuántas vulnerabilidades
+detecta y **verifica** un escáner automatizado (p. ej. un motor de pentest autónomo):
+
+- **`truth.json`** — *ground truth* machine-checkable: por cada vuln, su clase, endpoints,
+  cadena de explotación (PoC) y la señal observable que confirma que disparó.
+- **Colaborador OOB interno** (`/api/oob/token`, `/api/oob/hits/:token`, colector en
+  `/oob/:token`) — listener out-of-band tipo interactsh/Collaborator dentro del propio lab,
+  para verificar clases **ciegas** (SSRF, XXE OOB, XSS almacenado) sin infraestructura externa.
+- **`tools/coverage.js`** — corre un PoC de referencia por cada vuln contra el lab en marcha,
+  comprueba la señal de `truth.json`, imprime una tabla `PASS/FAIL/SKIP` y un marcador
+  `X / 23 verificadas`, y escribe `coverage-report.json` (diff antes/después para CI).
+
+```bash
+npm start                                   # arranca el lab en :3000
+node tools/coverage.js http://localhost:3000
+# -> VERIFIED 23 / 23
+```
+
+> Nota OOB: el colaborador interno verifica SSRF/XXE/deserialización ciegos por callback.
+> Para la RCE por `execSync` (#12), `coverage.js` usa un marcador en disco porque `execSync`
+> **bloquea** el event loop del propio server (deadlock con un OOB *interno*); contra un OOB
+> **externo** ese callback también funciona.

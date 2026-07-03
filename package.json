@@ -1,6 +1,6 @@
 {
   "name": "meridian-ledger",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "private": true,
   "description": "Meridian Ledger — SaaS financial operations platform",
   "main": "server.js",

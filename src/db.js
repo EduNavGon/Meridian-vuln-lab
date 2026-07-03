@@ -27,6 +27,8 @@ function seed() {
     DROP TABLE IF EXISTS transactions;
     DROP TABLE IF EXISTS webhooks;
     DROP TABLE IF EXISTS audit_log;
+    DROP TABLE IF EXISTS support_tickets;
+    DROP TABLE IF EXISTS password_resets;
 
     CREATE TABLE users (
       id           TEXT PRIMARY KEY,
