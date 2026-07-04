@@ -43,7 +43,7 @@ const OOB_PROTO = BASE_URL.protocol.replace(':', '');
 
 const CREDS = {
   attacker: { email: 'alice@meridian.io', password: 'Password123!' },
-  victim:   { email: 'bob@meridian.io',   password: 'Sunshine#2024' },
+  victim:   { email: 'bob@meridian.io',   password: 'M3ridian!Bob2026' },
   admin:    { email: 'admin@meridian.io', password: 'M3ridian!Admin' }
 };
 

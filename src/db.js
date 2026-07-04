@@ -126,7 +126,7 @@ function seed() {
     is_admin: 0, credits: 250, balance: 1200.00, api_key: ref('sk_live')
   });
   insUser.run({
-    id: ref('usr'), email: 'bob@meridian.io', password: 'Sunshine#2024',
+    id: ref('usr'), email: 'bob@meridian.io', password: 'M3ridian!Bob2026',
     name: 'Bob Tanaka', title: 'Treasury Lead', nickname: 'bob', role: 'member',
     is_admin: 0, credits: 500, balance: 88450.10, api_key: ref('sk_live')
   });

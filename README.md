@@ -68,7 +68,7 @@ lo requiere.
 | Email                | Password         | Rol    | Notas                                  |
 |----------------------|------------------|--------|----------------------------------------|
 | `alice@meridian.io`  | `Password123!`   | member | Cuenta "atacante" para las demos       |
-| `bob@meridian.io`    | `Sunshine#2024`  | member | Víctima (invoice confidencial, saldo)  |
+| `bob@meridian.io`    | `M3ridian!Bob2026`  | member | Víctima (invoice confidencial, saldo)  |
 | `admin@meridian.io`  | `M3ridian!Admin` | admin  | Datos privilegiados a escalar          |
 
 La base de datos se **recrea y re-siembra en cada arranque**, de modo que cada escaneo parte de
