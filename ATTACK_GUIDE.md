@@ -16,7 +16,7 @@ BASE="https://tu-target.up.railway.app"   # o http://localhost:3000 en local
 # Autentícate como la cuenta "atacante" (member, sin privilegios) y guarda la cookie de sesión.
 curl -s -c cookies.txt -X POST "$BASE/api/auth/login" \
   -H 'Content-Type: application/json' \
-  -d '{"email":"alice@meridian.io","password":"Password123!"}'
+  -d '{"email":"alice@meridian.io","password":"M3ridian!Alice2026"}'
 ```
 
 A partir de aquí, todas las peticiones usan `-b cookies.txt`. Casi toda la superficie vulnerable
@@ -668,7 +668,7 @@ reflexión inmediata en su propia respuesta no observa.
 
 Requieren sesión autenticada (`sid` de `alice@meridian.io`). Los PoCs asumen el lab en
 `http://localhost:3000` y una cookie en `cj.txt`
-(`curl -c cj.txt -b cj.txt -X POST /api/auth/login -d '{"email":"alice@meridian.io","password":"Password123!"}'`).
+(`curl -c cj.txt -b cj.txt -X POST /api/auth/login -d '{"email":"alice@meridian.io","password":"M3ridian!Alice2026"}'`).
 
 ## 20 · Inyección de operadores estilo NoSQL (rompe el scope por owner)
 

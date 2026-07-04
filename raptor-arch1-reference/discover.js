@@ -28,7 +28,7 @@
  *
  * Usage:
  *   node discover.js <baseUrl> <email> <password>
- *   node discover.js http://localhost:3000 alice@meridian.io 'Password123!'
+ *   node discover.js http://localhost:3000 alice@meridian.io 'M3ridian!Alice2026'
  *
  * No dependencies (Node built-in http/https only) so it ports cleanly.
  */
@@ -40,7 +40,7 @@ const fs = require('fs');
 
 const BASE = process.argv[2] || 'http://localhost:3000';
 const EMAIL = process.argv[3] || 'alice@meridian.io';
-const PASSWORD = process.argv[4] || 'Password123!';
+const PASSWORD = process.argv[4] || 'M3ridian!Alice2026';
 const CONCURRENCY = Number(process.env.CONCURRENCY || 40);
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH'];
 

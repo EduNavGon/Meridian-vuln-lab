@@ -42,7 +42,7 @@ const OOB_HOST = process.env.OOB_HOST || (BASE_URL.hostname === 'localhost' || B
 const OOB_PROTO = BASE_URL.protocol.replace(':', '');
 
 const CREDS = {
-  attacker: { email: 'alice@meridian.io', password: 'Password123!' },
+  attacker: { email: 'alice@meridian.io', password: 'M3ridian!Alice2026' },
   victim:   { email: 'bob@meridian.io',   password: 'M3ridian!Bob2026' },
   admin:    { email: 'admin@meridian.io', password: 'M3ridian!Admin' }
 };

@@ -25,7 +25,7 @@ aplicación (400/401/402/403/405/409) o un 200 no-html — nunca "200 html" ni 4
 
 ```bash
 node discover.js <baseUrl> <email> <password>
-node discover.js http://localhost:3000 alice@meridian.io 'Password123!'
+node discover.js http://localhost:3000 alice@meridian.io 'M3ridian!Alice2026'
 ```
 
 Salida: tabla por consola + `endpoints.json` con `{method, path, source, status, bodyFields}`.

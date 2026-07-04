@@ -121,7 +121,7 @@ function seed() {
     is_admin: 1, credits: 100000, balance: 4820500.75, api_key: ref('sk_live')
   });
   insUser.run({
-    id: ref('usr'), email: 'alice@meridian.io', password: 'Password123!',
+    id: ref('usr'), email: 'alice@meridian.io', password: 'M3ridian!Alice2026',
     name: 'Alice Moreno', title: 'Finance Analyst', nickname: 'alice', role: 'member',
     is_admin: 0, credits: 250, balance: 1200.00, api_key: ref('sk_live')
   });

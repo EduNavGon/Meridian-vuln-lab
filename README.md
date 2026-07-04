@@ -67,7 +67,7 @@ lo requiere.
 
 | Email                | Password         | Rol    | Notas                                  |
 |----------------------|------------------|--------|----------------------------------------|
-| `alice@meridian.io`  | `Password123!`   | member | Cuenta "atacante" para las demos       |
+| `alice@meridian.io`  | `M3ridian!Alice2026` | member | Cuenta "atacante" para las demos       |
 | `bob@meridian.io`    | `M3ridian!Bob2026`  | member | Víctima (invoice confidencial, saldo)  |
 | `admin@meridian.io`  | `M3ridian!Admin` | admin  | Datos privilegiados a escalar          |
 

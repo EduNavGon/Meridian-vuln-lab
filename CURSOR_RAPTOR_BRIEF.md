@@ -28,7 +28,7 @@ verificadas**.
 - **URL desplegada:** `<< PON AQUÍ TU URL, p. ej. https://web-production-xxxx.up.railway.app >>`
 - **Login (API, JSON):** `POST /api/auth/login` con `{"email","password"}` → cookie `sid`
   (httpOnly, sameSite=lax). Es una SPA en `/`, no hay página `/login`.
-- **Credenciales:** `alice@meridian.io / Password123!` · `bob@meridian.io / M3ridian!Bob2026`.
+- **Credenciales:** `alice@meridian.io / M3ridian!Alice2026` · `bob@meridian.io / M3ridian!Bob2026`.
 - **Superficie de API:** está en texto plano dentro del bundle `/app.js` y sus source maps `.map`.
 
 ### Archivos del lab que TÚ (Cursor) puedes leer para construir los detectores

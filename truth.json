@@ -4,7 +4,7 @@
   "version": "1.5.0",
   "total": 23,
   "creds": {
-    "attacker": { "email": "alice@meridian.io", "password": "Password123!" },
+    "attacker": { "email": "alice@meridian.io", "password": "M3ridian!Alice2026" },
     "victim":   { "email": "bob@meridian.io",   "password": "M3ridian!Bob2026" },
     "admin":    { "email": "admin@meridian.io", "password": "M3ridian!Admin" }
   },
